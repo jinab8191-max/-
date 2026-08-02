@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="연기루틴" />
+<meta name="theme-color" content="#c1523a" />
+<title>지나의 연기 루틴 다이어리</title>
+<style>
+  :root{
+    --bg:#faf6f1;
+    --card:#ffffff;
+    --primary:#c1523a;
+    --primary-dark:#963e2c;
+    --primary-light:#f3d9d0;
+    --accent:#4d6b53;
+    --text:#2b2622;
+    --muted:#867d73;
+    --border:#e8ddd1;
+    --success:#4d8a63;
+    --success-bg:#e6f2e9;
+    --danger:#c1523a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.5;
+  }
+  header{
+    position:sticky; top:0; z-index:10;
+    background:var(--card);
+    border-bottom:1px solid var(--border);
+    padding:14px 20px;
+  }
+  .header-inner{
+    max-width:920px; margin:0 auto;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:36px; height:36px; border-radius:10px;
+    background:var(--primary); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:16px;
+  }
+  .brand-title{font-size:16px; font-weight:700;}
+  .brand-date{font-size:12px; color:var(--muted);}
+  nav{display:flex; gap:4px; background:var(--bg); padding:4px; border-radius:10px;}
+  nav button{
+    border:none; background:transparent; padding:8px 14px;
+    border-radius:8px; font-size:13px; font-weight:600; color:var(--muted);
+    cursor:pointer; transition:all .15s;
+  }
+  nav button.active{background:var(--primary); color:#fff;}
+  main{max-width:920px; margin:0 auto; padding:24px 20px 80px;}
+  .tab{display:none;}
+  .tab.active{display:block;}
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:20px; margin-bottom:16px;
+  }
+  h2{font-size:18px; margin:0 0 4px; font-weight:700;}
+  h3{font-size:15px; margin:0 0 10px; font-weight:700;}
+  .subtext{font-size:13px; color:var(--muted); margin:0 0 16px;}
+  .stat-row{display:flex; gap:12px; margin-bottom:18px; flex-wrap:wrap;}
+  .stat{
+    flex:1; min-width:110px; background:var(--bg); border-radius:10px; padding:12px 14px;
+  }
+  .stat .num{font-size:22px; font-weight:700; color:var(--primary);}
+  .stat .label{font-size:12px; color:var(--muted); margin-top:2px;}
+  .checklist-group{margin-bottom:18px;}
+  .group-title{
+    font-size:12px; font-weight:700; color:var(--primary-dark);
+    text-transform:uppercase; letter-spacing:.03em; margin-bottom:8px;
+  }
+  .check-item{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px; border:1px solid var(--border); border-radius:10px;
+    margin-bottom:6px; background:#fff; cursor:pointer;
+  }
+  .check-item.checked{background:var(--success-bg); border-color:var(--success);}
+  .check-item input{width:18px; height:18px; accent-color:var(--success); cursor:pointer;}
+  .check-item span{flex:1; font-size:14px;}
+  .check-item.checked span{text-decoration:line-through; color:var(--muted);}
+  .remove-btn{
+    border:none; background:transparent; color:var(--muted); cursor:pointer;
+    font-size:16px; padding:2px 6px; border-radius:6px;
+  }
+  .remove-btn:hover{background:var(--bg); color:var(--danger);}
+  .add-row{display:flex; gap:8px; margin-top:8px;}
+  .add-row input, .add-row select{
+    padding:9px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px;
+  }
+  .add-row input[type=text]{flex:1;}
+  input,textarea,select{
+    font-family:inherit; color:var(--text); background:#fff;
+    border:1px solid var(--border); border-radius:8px; padding:9px 10px; font-size:13px;
+  }
+  textarea{width:100%; resize:vertical; min-height:70px;}
+  button.btn{
+    border:none; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:700;
+    cursor:pointer; background:var(--primary); color:#fff;
+  }
+  button.btn:hover{background:var(--primary-dark);}
+  button.btn.secondary{background:var(--bg); color:var(--text); border:1px solid var(--border);}
+  button.btn.secondary:hover{background:var(--primary-light);}
+  .tag{
+    display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px;
+    background:var(--primary-light); color:var(--primary-dark); margin:2px 4px 2px 0; font-weight:600;
+  }
+  .tag-picker{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+  .tag-choice{
+    padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600;
+    border:1px solid var(--border); background:#fff; cursor:pointer; color:var(--muted);
+  }
+  .tag-choice.selected{background:var(--primary); border-color:var(--primary); color:#fff;}
+  .entry-card{
+    border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px; background:#fff;
+  }
+  .entry-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .entry-date{font-size:13px; font-weight:700; color:var(--primary-dark);}
+  .entry-note{font-size:13px; color:var(--text); white-space:pre-wrap; margin-top:6px;}
+  .empty-state{
+    text-align:center; padding:40px 20px; color:var(--muted); font-size:13px;
+  }
+  .video-list{display:grid; grid-template-columns:1fr; gap:14px;}
+  .video-card{border:1px solid var(--border); border-radius:12px; padding:14px; background:#fff;}
+  .video-card video{width:100%; border-radius:8px; background:#111; display:block; margin-bottom:10px;}
+  .video-meta{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+  .video-title{font-weight:700; font-size:14px;}
+  .video-date{font-size:12px; color:var(--muted);}
+  .field-label{font-size:12px; font-weight:700; color:var(--muted); margin:10px 0 4px;}
+  .row-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:10px;}
+  .upload-box{
+    border:2px dashed var(--border); border-radius:12px; padding:22px; text-align:center; margin-bottom:14px;
+    color:var(--muted); font-size:13px; cursor:pointer;
+  }
+  .upload-box:hover{border-color:var(--primary); color:var(--primary-dark);}
+  .save-toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--text); color:#fff; padding:10px 18px; border-radius:999px; font-size:13px;
+    opacity:0; transition:opacity .3s; pointer-events:none;
+  }
+  .save-toast.show{opacity:1;}
+  .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .cal-month-label{font-size:15px; font-weight:700;}
+  .cal-nav-btn{
+    border:1px solid var(--border); background:#fff; width:32px; height:32px; border-radius:8px;
+    font-size:15px; cursor:pointer; color:var(--text);
+  }
+  .cal-nav-btn:hover{background:var(--primary-light); border-color:var(--primary);}
+  .cal-weekdays{display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:11px; color:var(--muted); margin-bottom:6px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+  .cal-day{
+    aspect-ratio:1; border-radius:8px; border:1px solid var(--border); background:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:12px; cursor:pointer; gap:3px;
+  }
+  .cal-day.empty{border:none; background:transparent; cursor:default;}
+  .cal-day.today{border-color:var(--primary); font-weight:700; color:var(--primary-dark);}
+  .cal-day.selected{background:var(--primary-light); border-color:var(--primary);}
+  .cal-dot-row{display:flex; gap:2px; height:5px;}
+  .cal-dot{width:5px; height:5px; border-radius:50%;}
+  .cal-dot.event{background:var(--primary);}
+  .cal-dot.routine{background:var(--success);}
+  .cal-dot.journal{background:var(--accent);}
+  .cal-legend{display:flex; gap:14px; margin-top:12px; font-size:11px; color:var(--muted); flex-wrap:wrap;}
+  .cal-legend span{display:inline-flex; align-items:center; gap:5px;}
+  .cal-legend .cal-dot{width:6px; height:6px;}
+  @media (max-width:600px){
+    nav{overflow-x:auto;}
+    .stat-row{flex-direction:column;}
+    .cal-day{font-size:11px;}
+  }
+</style>
+</head>
+<body>
+<noscript>
+  <div style="max-width:480px;margin:60px auto;padding:24px;text-align:center;font-family:-apple-system,sans-serif;color:#2b2622;">
+    <h2 style="margin:0 0 12px;">Safari 브라우저로 열어주세요</h2>
+    <p style="font-size:14px;color:#867d73;line-height:1.7;">
+      지금 이 화면은 '미리보기(Quick Look)'로 열려서 앱이 작동하지 않아요.<br><br>
+      아래 <b>공유 버튼</b>을 누르고 목록에서 <b>'Safari에서 열기'</b>를 선택해주세요.<br>
+      그러면 정상적으로 작동해요.
+    </p>
+  </div>
+</noscript>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">지</div>
+      <div>
+        <div class="brand-title">지나의 연기 루틴 다이어리</div>
+        <div class="brand-date" id="today-label"></div>
+      </div>
+    </div>
+    <nav>
+      <button data-tab="routine" class="active">오늘의 루틴</button>
+      <button data-tab="calendar">일정</button>
+      <button data-tab="journal">훈련 일지</button>
+      <button data-tab="video">영상 아카이브</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section id="tab-routine" class="tab active">
+    <div class="card">
+      <h2>오늘의 루틴</h2>
+      <p class="subtext">건강한 생활과 연기 훈련, 매일 체크하며 습관으로 만들어요.</p>
+      <div class="stat-row">
+        <div class="stat"><div class="num" id="stat-today">0/0</div><div class="label">오늘 완료</div></div>
+        <div class="stat"><div class="num" id="stat-streak">0일</div><div class="label">연속 100% 달성</div></div>
+        <div class="stat"><div class="num" id="stat-rate">0%</div><div class="label">최근 7일 평균</div></div>
+      </div>
+
+      <div id="routine-groups"></div>
+
+      <div class="checklist-group">
+        <div class="group-title">항목 추가</div>
+        <div class="add-row">
+          <select id="new-item-category">
+            <option value="health">건강 루틴</option>
+            <option value="training">연기 훈련</option>
+            <option value="academy">학원 숙제</option>
+          </select>
+          <input type="text" id="new-item-label" placeholder="예: 카메라 워크 연습 15분" />
+          <button class="btn" id="add-item-btn">추가</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-calendar" class="tab">
+    <div class="card">
+      <h2>일정</h2>
+      <p class="subtext">오디션, 학원 수업, 알바 등 일정을 달력으로 확인해요.</p>
+      <div class="cal-header">
+        <button class="cal-nav-btn" id="cal-prev">‹</button>
+        <span class="cal-month-label" id="cal-month-label"></span>
+        <button class="cal-nav-btn" id="cal-next">›</button>
+      </div>
+      <div class="cal-weekdays">
+        <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <span><span class="cal-dot event"></span>일정</span>
+        <span><span class="cal-dot routine"></span>루틴 완료</span>
+        <span><span class="cal-dot journal"></span>훈련 일지</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="cal-selected-label">일정</h3>
+      <div id="cal-events-list"></div>
+      <div class="field-label">일정 추가</div>
+      <div class="add-row" style="flex-wrap:wrap;">
+        <input type="time" id="event-time" style="width:110px;" />
+        <input type="text" id="event-title" placeholder="예: 오디션 - OO프로덕션" style="flex:1; min-width:160px;" />
+      </div>
+      <textarea id="event-memo" placeholder="메모 (장소, 준비물 등)" style="margin-top:8px;"></textarea>
+      <div class="row-actions">
+        <button class="btn" id="add-event-btn">일정 저장</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-journal" class="tab">
+    <div class="card">
+      <h2>연기 훈련 일지</h2>
+      <p class="subtext">오늘 어떤 훈련을 했는지, 무엇을 느꼈는지 기록해요.</p>
+
+      <div class="field-label">오늘 한 훈련 (복수 선택)</div>
+      <div class="tag-picker" id="journal-tags"></div>
+
+      <div class="field-label">오늘 느낀 점 / 배운 점</div>
+      <textarea id="journal-note" placeholder="예: 발성이 아직 약하다. 대본 리딩할 때 감정선을 더 명확히..."></textarea>
+
+      <div class="field-label">다음 목표</div>
+      <textarea id="journal-goal" placeholder="예: 내일은 즉흥 연기 워밍업을 20분으로 늘려보기"></textarea>
+
+      <div class="row-actions">
+        <button class="btn" id="save-journal-btn">일지 저장</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>지난 기록</h3>
+      <div id="journal-list"></div>
+    </div>
+  </section>
+
+  <section id="tab-video" class="tab">
+    <div class="card">
+      <h2>연기 영상 아카이브</h2>
+      <p class="subtext">연습 영상을 올리고 스스로 피드백하며 성장 방향을 기록해요.</p>
+
+      <div class="upload-box" id="upload-box">
+        영상을 클릭해서 선택하거나 여기로 끌어다 놓으세요
+        <input type="file" id="video-input" accept="video/*" style="display:none;" />
+      </div>
+
+      <div id="upload-form" style="display:none;">
+        <div class="field-label">제목</div>
+        <input type="text" id="video-title" placeholder="예: 씬 스터디 - 오늘의 대본" style="width:100%;" />
+        <div class="field-label">셀프 코멘트</div>
+        <textarea id="video-comment" placeholder="영상을 보고 느낀 점을 적어보세요"></textarea>
+        <div class="field-label">앞으로의 방향</div>
+        <textarea id="video-direction" placeholder="다음엔 어떻게 개선하고 싶은지 적어보세요"></textarea>
+        <div class="row-actions">
+          <button class="btn secondary" id="cancel-upload-btn">취소</button>
+          <button class="btn" id="save-video-btn">영상 저장</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="video-list" id="video-list"></div>
+  </section>
+
+</main>
+
+<div class="save-toast" id="toast">저장됐어요</div>
+
+<script>
+const DB_NAME = "actorRoutineDB";
+const DB_VERSION = 2;
+let db;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains("routineItems")){
+        d.createObjectStore("routineItems", {keyPath:"id"});
+      }
+      if(!d.objectStoreNames.contains("routineLog")){
+        d.createObjectStore("routineLog", {keyPath:"date"});
+      }
+      if(!d.objectStoreNames.contains("journalEntries")){
+        d.createObjectStore("journalEntries", {keyPath:"id"});
+      }
+      if(!d.objectStoreNames.contains("videos")){
+        d.createObjectStore("videos", {keyPath:"id"});
+      }
+      if(!d.objectStoreNames.contains("events")){
+        d.createObjectStore("events", {keyPath:"id"});
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function setupHomeScreenIcon(){
+  try{
+    const canvas = document.createElement("canvas");
+    canvas.width = 180; canvas.height = 180;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#c1523a";
+    ctx.fillRect(0,0,180,180);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 92px -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("지", 90, 98);
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("link");
+    link.rel = "apple-touch-icon";
+    link.href = dataUrl;
+    document.head.appendChild(link);
+    const icon = document.createElement("link");
+    icon.rel = "icon";
+    icon.href = dataUrl;
+    document.head.appendChild(icon);
+  } catch(err){ /* icon generation is best-effort */ }
+}
+
+function tx(storeName, mode){
+  return db.transaction(storeName, mode).objectStore(storeName);
+}
+function reqToPromise(req){
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function getAll(storeName){
+  return reqToPromise(tx(storeName, "readonly").getAll());
+}
+function put(storeName, val){
+  return reqToPromise(tx(storeName, "readwrite").put(val));
+}
+function del(storeName, key){
+  return reqToPromise(tx(storeName, "readwrite").delete(key));
+}
+function get(storeName, key){
+  return reqToPromise(tx(storeName, "readonly").get(key));
+}
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function dateLabel(dateStr){
+  const d = new Date(dateStr + "T00:00:00");
+  const days = ["일","월","화","수","목","금","토"];
+  return `${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+}
+function daysAgoStr(n){
+  const d = new Date();
+  d.setDate(d.getDate()-n);
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg || "저장됐어요";
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1400);
+}
+function uid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+
+const DEFAULT_ITEMS = [
+  {id:"h1", category:"health", label:"기상 후 물 한 잔 마시기"},
+  {id:"h2", category:"health", label:"아침 스트레칭 10분"},
+  {id:"h3", category:"health", label:"균형 잡힌 식사"},
+  {id:"h4", category:"health", label:"운동 30분 (유산소/근력)"},
+  {id:"h5", category:"health", label:"7시간 이상 수면 목표로 취침"},
+  {id:"t2", category:"training", label:"복식호흡 5분 (4초 코로 들숨-배 부풀리기 → 6초 입으로 날숨, 10회)"},
+  {id:"t1", category:"training", label:"발성 훈련 10분 (립트릴 3분: 낮은음→높은음 → '아' 롱톤 5세트: 흔들림 없이 최대한 길게)"},
+  {id:"p3", category:"training", label:"발음 훈련 10분 (잰말놀이 '간장공장공장장' 5회: 천천히→빠르게 → 거울 보며 '아에이오우' 크게 5회)"},
+  {id:"t3", category:"training", label:"대본 리딩 20분 (같은 대사 3회 반복, 매번 다른 감정으로 읽기)"},
+  {id:"t4", category:"training", label:"즉흥 워밍업 10분 (무작위 상황 3개 뽑아 대사 없이 2분씩 몸으로 표현)"},
+  {id:"t5", category:"training", label:"무브먼트 훈련 10분 (관절 스트레칭 5분 + 음악 맞춰 자유 움직임 5분)"},
+  {id:"t6", category:"training", label:"오디션 공고 확인 및 지원"},
+];
+const RETIRED_ITEM_IDS = ["p1","p2","p4"];
+
+const TRAINING_TAGS = ["발성","호흡","대사","즉흥","신체훈련","카메라 워크","씬 스터디","오디션 준비","기타"];
+
+let routineItems = [];
+let routineLog = {checked:[]};
+let selectedTags = [];
+let currentVideoBlob = null;
+let calYear, calMonth, selectedDate;
+
+async function initApp(){
+  setupHomeScreenIcon();
+  db = await openDB();
+
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  selectedDate = todayStr();
+
+  const existing = await getAll("routineItems");
+  const existingMap = new Map(existing.map(i => [i.id, i]));
+  for(const rid of RETIRED_ITEM_IDS){
+    if(existingMap.has(rid)){
+      await del("routineItems", rid);
+      existingMap.delete(rid);
+    }
+  }
+  for(const item of DEFAULT_ITEMS){
+    await put("routineItems", item);
+    existingMap.set(item.id, item);
+  }
+  routineItems = Array.from(existingMap.values());
+
+  document.getElementById("today-label").textContent = dateLabel(todayStr());
+
+  await renderRoutine();
+  await renderJournalTags();
+  await renderJournalList();
+  await renderVideoList();
+  await renderCalendar();
+  await renderSelectedEvents();
+
+  setupNav();
+  setupRoutineHandlers();
+  setupJournalHandlers();
+  setupVideoHandlers();
+  setupCalendarHandlers();
+}
+
+async function renderRoutine(){
+  const log = await get("routineLog", todayStr());
+  routineLog = log || {date: todayStr(), checked: []};
+
+  const groups = document.getElementById("routine-groups");
+  groups.innerHTML = "";
+
+  const cats = [
+    {key:"health", label:"건강 루틴"},
+    {key:"training", label:"연기 훈련"},
+    {key:"academy", label:"학원 숙제"}
+  ];
+
+  for(const cat of cats){
+    const items = routineItems.filter(i => i.category === cat.key);
+    if(items.length === 0) continue;
+    const wrap = document.createElement("div");
+    wrap.className = "checklist-group";
+    const title = document.createElement("div");
+    title.className = "group-title";
+    title.textContent = cat.label;
+    wrap.appendChild(title);
+
+    for(const item of items){
+      const checked = routineLog.checked.includes(item.id);
+      const row = document.createElement("div");
+      row.className = "check-item" + (checked ? " checked" : "");
+      row.innerHTML = `
+        <input type="checkbox" ${checked ? "checked" : ""} data-id="${item.id}" />
+        <span>${escapeHtml(item.label)}</span>
+        <button class="remove-btn" data-remove="${item.id}" title="삭제">×</button>
+      `;
+      wrap.appendChild(row);
+    }
+    groups.appendChild(wrap);
+  }
+
+  await renderStats();
+}
+
+async function renderStats(){
+  const total = routineItems.length;
+  const done = routineLog.checked.length;
+  document.getElementById("stat-today").textContent = `${done}/${total}`;
+
+  const allLogs = await getAll("routineLog");
+  const logMap = {};
+  allLogs.forEach(l => logMap[l.date] = l);
+
+  let streak = 0;
+  for(let i=0; i<365; i++){
+    const d = daysAgoStr(i);
+    const l = logMap[d];
+    const complete = l && total > 0 && l.checked.length >= total;
+    if(i === 0){
+      if(!complete) break;
+      streak++;
+    } else {
+      if(complete) streak++;
+      else break;
+    }
+  }
+  document.getElementById("stat-streak").textContent = `${streak}일`;
+
+  let sum = 0, count = 0;
+  for(let i=0; i<7; i++){
+    const d = daysAgoStr(i);
+    const l = logMap[d];
+    if(total > 0){
+      sum += l ? (l.checked.length/total) : 0;
+      count++;
+    }
+  }
+  const rate = count > 0 ? Math.round((sum/count)*100) : 0;
+  document.getElementById("stat-rate").textContent = `${rate}%`;
+}
+
+function setupRoutineHandlers(){
+  document.getElementById("routine-groups").addEventListener("click", async (e) => {
+    if(e.target.matches("input[type=checkbox]")){
+      const id = e.target.dataset.id;
+      const idx = routineLog.checked.indexOf(id);
+      if(idx >= 0) routineLog.checked.splice(idx,1);
+      else routineLog.checked.push(id);
+      routineLog.date = todayStr();
+      await put("routineLog", routineLog);
+      await renderRoutine();
+      showToast("저장됐어요");
+    }
+    if(e.target.dataset.remove){
+      const id = e.target.dataset.remove;
+      await del("routineItems", id);
+      routineItems = routineItems.filter(i => i.id !== id);
+      routineLog.checked = routineLog.checked.filter(c => c !== id);
+      await put("routineLog", routineLog);
+      await renderRoutine();
+    }
+  });
+
+  document.getElementById("add-item-btn").addEventListener("click", async () => {
+    const label = document.getElementById("new-item-label").value.trim();
+    const category = document.getElementById("new-item-category").value;
+    if(!label) return;
+    const item = {id: uid(), category, label};
+    await put("routineItems", item);
+    routineItems.push(item);
+    document.getElementById("new-item-label").value = "";
+    await renderRoutine();
+    showToast("항목이 추가됐어요");
+  });
+}
+
+function renderJournalTags(){
+  const wrap = document.getElementById("journal-tags");
+  wrap.innerHTML = "";
+  TRAINING_TAGS.forEach(tag => {
+    const btn = document.createElement("div");
+    btn.className = "tag-choice";
+    btn.textContent = tag;
+    btn.addEventListener("click", () => {
+      if(selectedTags.includes(tag)){
+        selectedTags = selectedTags.filter(t => t !== tag);
+        btn.classList.remove("selected");
+      } else {
+        selectedTags.push(tag);
+        btn.classList.add("selected");
+      }
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function setupJournalHandlers(){
+  document.getElementById("save-journal-btn").addEventListener("click", async () => {
+    const note = document.getElementById("journal-note").value.trim();
+    const goal = document.getElementById("journal-goal").value.trim();
+    if(selectedTags.length === 0 && !note && !goal){
+      showToast("내용을 입력해주세요");
+      return;
+    }
+    const entry = {
+      id: uid(),
+      date: todayStr(),
+      tags: selectedTags.slice(),
+      note,
+      goal,
+      createdAt: Date.now()
+    };
+    await put("journalEntries", entry);
+    document.getElementById("journal-note").value = "";
+    document.getElementById("journal-goal").value = "";
+    selectedTags = [];
+    document.querySelectorAll(".tag-choice.selected").forEach(el => el.classList.remove("selected"));
+    await renderJournalList();
+    showToast("일지가 저장됐어요");
+  });
+}
+
+async function renderJournalList(){
+  const entries = await getAll("journalEntries");
+  entries.sort((a,b) => b.createdAt - a.createdAt);
+  const wrap = document.getElementById("journal-list");
+  wrap.innerHTML = "";
+  if(entries.length === 0){
+    wrap.innerHTML = `<div class="empty-state">아직 기록된 일지가 없어요. 오늘의 훈련을 기록해보세요.</div>`;
+    return;
+  }
+  entries.forEach(entry => {
+    const card = document.createElement("div");
+    card.className = "entry-card";
+    const tagsHtml = entry.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("");
+    card.innerHTML = `
+      <div class="entry-head">
+        <span class="entry-date">${dateLabel(entry.date)}</span>
+        <button class="remove-btn" data-del="${entry.id}" title="삭제">×</button>
+      </div>
+      <div>${tagsHtml}</div>
+      ${entry.note ? `<div class="entry-note"><strong>느낀 점:</strong> ${escapeHtml(entry.note)}</div>` : ""}
+      ${entry.goal ? `<div class="entry-note"><strong>다음 목표:</strong> ${escapeHtml(entry.goal)}</div>` : ""}
+    `;
+    wrap.appendChild(card);
+  });
+  wrap.querySelectorAll("[data-del]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await del("journalEntries", btn.dataset.del);
+      await renderJournalList();
+    });
+  });
+}
+
+function setupVideoHandlers(){
+  const uploadBox = document.getElementById("upload-box");
+  const videoInput = document.getElementById("video-input");
+  const uploadForm = document.getElementById("upload-form");
+
+  uploadBox.addEventListener("click", () => videoInput.click());
+  uploadBox.addEventListener("dragover", (e) => { e.preventDefault(); });
+  uploadBox.addEventListener("drop", (e) => {
+    e.preventDefault();
+    if(e.dataTransfer.files.length > 0){
+      handleVideoFile(e.dataTransfer.files[0]);
+    }
+  });
+  videoInput.addEventListener("change", () => {
+    if(videoInput.files.length > 0){
+      handleVideoFile(videoInput.files[0]);
+    }
+  });
+
+  function handleVideoFile(file){
+    currentVideoBlob = file;
+    document.getElementById("video-title").value = file.name.replace(/\.[^/.]+$/, "");
+    uploadForm.style.display = "block";
+  }
+
+  document.getElementById("cancel-upload-btn").addEventListener("click", () => {
+    currentVideoBlob = null;
+    videoInput.value = "";
+    document.getElementById("video-title").value = "";
+    document.getElementById("video-comment").value = "";
+    document.getElementById("video-direction").value = "";
+    uploadForm.style.display = "none";
+  });
+
+  document.getElementById("save-video-btn").addEventListener("click", async () => {
+    if(!currentVideoBlob){ showToast("영상을 선택해주세요"); return; }
+    const title = document.getElementById("video-title").value.trim() || "제목 없음";
+    const comment = document.getElementById("video-comment").value.trim();
+    const direction = document.getElementById("video-direction").value.trim();
+    const video = {
+      id: uid(),
+      date: todayStr(),
+      title,
+      comment,
+      direction,
+      blob: currentVideoBlob,
+      createdAt: Date.now()
+    };
+    await put("videos", video);
+    currentVideoBlob = null;
+    videoInput.value = "";
+    document.getElementById("video-title").value = "";
+    document.getElementById("video-comment").value = "";
+    document.getElementById("video-direction").value = "";
+    uploadForm.style.display = "none";
+    await renderVideoList();
+    showToast("영상이 저장됐어요");
+  });
+}
+
+async function renderVideoList(){
+  const videos = await getAll("videos");
+  videos.sort((a,b) => b.createdAt - a.createdAt);
+  const wrap = document.getElementById("video-list");
+  wrap.innerHTML = "";
+  if(videos.length === 0){
+    wrap.innerHTML = `<div class="empty-state">아직 업로드된 영상이 없어요. 연습 영상을 올려보세요.</div>`;
+    return;
+  }
+  videos.forEach(v => {
+    const url = URL.createObjectURL(v.blob);
+    const card = document.createElement("div");
+    card.className = "video-card";
+    card.innerHTML = `
+      <video src="${url}" controls></video>
+      <div class="video-meta">
+        <span class="video-title">${escapeHtml(v.title)}</span>
+        <span class="video-date">${dateLabel(v.date)}</span>
+      </div>
+      <div class="field-label">셀프 코멘트</div>
+      <textarea data-comment="${v.id}" placeholder="코멘트를 입력하세요">${escapeHtml(v.comment || "")}</textarea>
+      <div class="field-label">앞으로의 방향</div>
+      <textarea data-direction="${v.id}" placeholder="개선 방향을 입력하세요">${escapeHtml(v.direction || "")}</textarea>
+      <div class="row-actions">
+        <button class="btn secondary" data-del-video="${v.id}">삭제</button>
+        <button class="btn" data-save-video="${v.id}">메모 저장</button>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+
+  wrap.querySelectorAll("[data-save-video]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.saveVideo;
+      const video = await get("videos", id);
+      video.comment = wrap.querySelector(`[data-comment="${id}"]`).value.trim();
+      video.direction = wrap.querySelector(`[data-direction="${id}"]`).value.trim();
+      await put("videos", video);
+      showToast("메모가 저장됐어요");
+    });
+  });
+  wrap.querySelectorAll("[data-del-video]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if(!confirm("이 영상을 삭제할까요?")) return;
+      await del("videos", btn.dataset.delVideo);
+      await renderVideoList();
+    });
+  });
+}
+
+async function renderCalendar(){
+  const grid = document.getElementById("cal-grid");
+  document.getElementById("cal-month-label").textContent = `${calYear}년 ${calMonth+1}월`;
+  grid.innerHTML = "";
+
+  const firstDay = new Date(calYear, calMonth, 1);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+
+  const [events, logs, journals] = await Promise.all([
+    getAll("events"), getAll("routineLog"), getAll("journalEntries")
+  ]);
+  const eventDates = new Set(events.map(e => e.date));
+  const logMap = {};
+  logs.forEach(l => logMap[l.date] = l);
+  const journalDates = new Set(journals.map(j => j.date));
+
+  for(let i=0; i<startWeekday; i++){
+    const empty = document.createElement("div");
+    empty.className = "cal-day empty";
+    grid.appendChild(empty);
+  }
+
+  for(let day=1; day<=daysInMonth; day++){
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    const cell = document.createElement("div");
+    cell.className = "cal-day";
+    if(dateStr === todayStr()) cell.classList.add("today");
+    if(dateStr === selectedDate) cell.classList.add("selected");
+    cell.dataset.date = dateStr;
+
+    let dots = "";
+    if(eventDates.has(dateStr)) dots += `<span class="cal-dot event"></span>`;
+    const log = logMap[dateStr];
+    if(log && routineItems.length > 0 && log.checked.length >= routineItems.length) dots += `<span class="cal-dot routine"></span>`;
+    if(journalDates.has(dateStr)) dots += `<span class="cal-dot journal"></span>`;
+
+    cell.innerHTML = `<span>${day}</span><span class="cal-dot-row">${dots}</span>`;
+    grid.appendChild(cell);
+  }
+
+  grid.querySelectorAll(".cal-day:not(.empty)").forEach(cell => {
+    cell.addEventListener("click", async () => {
+      selectedDate = cell.dataset.date;
+      await renderCalendar();
+      await renderSelectedEvents();
+    });
+  });
+}
+
+async function renderSelectedEvents(){
+  document.getElementById("cal-selected-label").textContent = dateLabel(selectedDate) + " 일정";
+  const events = await getAll("events");
+  const dayEvents = events.filter(e => e.date === selectedDate)
+    .sort((a,b) => (a.time || "").localeCompare(b.time || ""));
+  const wrap = document.getElementById("cal-events-list");
+  wrap.innerHTML = "";
+  if(dayEvents.length === 0){
+    wrap.innerHTML = `<div class="empty-state">등록된 일정이 없어요.</div>`;
+    return;
+  }
+  dayEvents.forEach(ev => {
+    const row = document.createElement("div");
+    row.className = "entry-card";
+    row.innerHTML = `
+      <div class="entry-head">
+        <span class="entry-date">${ev.time ? escapeHtml(ev.time) + " · " : ""}${escapeHtml(ev.title)}</span>
+        <button class="remove-btn" data-del-event="${ev.id}" title="삭제">×</button>
+      </div>
+      ${ev.memo ? `<div class="entry-note">${escapeHtml(ev.memo)}</div>` : ""}
+    `;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll("[data-del-event]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await del("events", btn.dataset.delEvent);
+      await renderCalendar();
+      await renderSelectedEvents();
+    });
+  });
+}
+
+function setupCalendarHandlers(){
+  document.getElementById("cal-prev").addEventListener("click", async () => {
+    calMonth--;
+    if(calMonth < 0){ calMonth = 11; calYear--; }
+    await renderCalendar();
+  });
+  document.getElementById("cal-next").addEventListener("click", async () => {
+    calMonth++;
+    if(calMonth > 11){ calMonth = 0; calYear++; }
+    await renderCalendar();
+  });
+  document.getElementById("add-event-btn").addEventListener("click", async () => {
+    const title = document.getElementById("event-title").value.trim();
+    if(!title){ showToast("일정 제목을 입력해주세요"); return; }
+    const time = document.getElementById("event-time").value;
+    const memo = document.getElementById("event-memo").value.trim();
+    const ev = {id: uid(), date: selectedDate, time, title, memo, createdAt: Date.now()};
+    await put("events", ev);
+    document.getElementById("event-title").value = "";
+    document.getElementById("event-time").value = "";
+    document.getElementById("event-memo").value = "";
+    await renderCalendar();
+    await renderSelectedEvents();
+    showToast("일정이 저장됐어요");
+  });
+}
+
+function setupNav(){
+  document.querySelectorAll("nav button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+initApp().catch(function(err){
+  console.error(err);
+  document.querySelector("main").innerHTML =
+    '<div style="max-width:480px;margin:40px auto;padding:24px;text-align:center;">' +
+    '<h2 style="margin:0 0 12px;">저장 공간을 열 수 없어요</h2>' +
+    '<p style="font-size:14px;color:var(--muted);line-height:1.7;">' +
+    'Safari의 \'비공개 브라우징(프라이빗 탭)\'에서는 기록이 저장되지 않아요. 일반 탭에서 다시 열어주세요.<br><br>' +
+    '그래도 안 되면 화면을 새로고침해보세요.' +
+    '</p></div>';
+});
+</script>
+</body>
+</html>
