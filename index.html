@@ -51,11 +51,11 @@
   }
   .brand-title{font-size:16px; font-weight:700;}
   .brand-date{font-size:12px; color:var(--muted);}
-  nav{display:flex; gap:4px; background:var(--bg); padding:4px; border-radius:10px;}
+  nav{display:flex; gap:4px; background:var(--bg); padding:4px; border-radius:10px; overflow-x:auto;}
   nav button{
     border:none; background:transparent; padding:8px 14px;
     border-radius:8px; font-size:13px; font-weight:600; color:var(--muted);
-    cursor:pointer; transition:all .15s;
+    cursor:pointer; transition:all .15s; white-space:nowrap;
   }
   nav button.active{background:var(--primary); color:#fff;}
   main{max-width:920px; margin:0 auto; padding:24px 20px 80px;}
@@ -148,13 +148,17 @@
     opacity:0; transition:opacity .3s; pointer-events:none;
   }
   .save-toast.show{opacity:1;}
-  .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
-  .cal-month-label{font-size:15px; font-weight:700;}
+  .day-nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:8px;}
+  .day-nav-label{display:flex; flex-direction:column; align-items:center;}
+  .day-nav-label .d{font-size:15px; font-weight:700;}
+  .day-nav-label .t{font-size:11px; color:var(--primary); cursor:pointer;}
   .cal-nav-btn{
     border:1px solid var(--border); background:#fff; width:32px; height:32px; border-radius:8px;
-    font-size:15px; cursor:pointer; color:var(--text);
+    font-size:15px; cursor:pointer; color:var(--text); flex-shrink:0;
   }
   .cal-nav-btn:hover{background:var(--primary-light); border-color:var(--primary);}
+  .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .cal-month-label{font-size:15px; font-weight:700;}
   .cal-weekdays{display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:11px; color:var(--muted); margin-bottom:6px;}
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
   .cal-day{
@@ -185,9 +189,8 @@
   <div style="max-width:480px;margin:60px auto;padding:24px;text-align:center;font-family:-apple-system,sans-serif;color:#2b2622;">
     <h2 style="margin:0 0 12px;">Safari 브라우저로 열어주세요</h2>
     <p style="font-size:14px;color:#867d73;line-height:1.7;">
-      지금 이 화면은 '미리보기(Quick Look)'로 열려서 앱이 작동하지 않아요.<br><br>
-      아래 <b>공유 버튼</b>을 누르고 목록에서 <b>'Safari에서 열기'</b>를 선택해주세요.<br>
-      그러면 정상적으로 작동해요.
+      지금 이 화면은 스크립트가 실행되지 않는 미리보기예요.<br><br>
+      이 페이지를 Safari(또는 Chrome) 브라우저 주소창을 통해 직접 열어주세요.
     </p>
   </div>
 </noscript>
@@ -214,8 +217,18 @@
 
   <section id="tab-routine" class="tab active">
     <div class="card">
-      <h2>오늘의 루틴</h2>
-      <p class="subtext">건강한 생활과 연기 훈련, 매일 체크하며 습관으로 만들어요.</p>
+      <h2>루틴 체크리스트</h2>
+      <p class="subtext">건강한 생활과 연기 훈련, 매일 체크하며 습관으로 만들어요. 화살표로 다른 날짜도 볼 수 있어요.</p>
+
+      <div class="day-nav">
+        <button class="cal-nav-btn" id="routine-prev-day">‹</button>
+        <div class="day-nav-label">
+          <span class="d" id="routine-date-label"></span>
+          <span class="t" id="routine-today-btn" style="display:none;">오늘로 이동</span>
+        </div>
+        <button class="cal-nav-btn" id="routine-next-day">›</button>
+      </div>
+
       <div class="stat-row">
         <div class="stat"><div class="num" id="stat-today">0/0</div><div class="label">오늘 완료</div></div>
         <div class="stat"><div class="num" id="stat-streak">0일</div><div class="label">연속 100% 달성</div></div>
@@ -277,12 +290,15 @@
   <section id="tab-journal" class="tab">
     <div class="card">
       <h2>연기 훈련 일지</h2>
-      <p class="subtext">오늘 어떤 훈련을 했는지, 무엇을 느꼈는지 기록해요.</p>
+      <p class="subtext">오늘 어떤 훈련을 했는지, 무엇을 느꼈는지 기록해요. 날짜를 바꾸면 지난 날짜로도 기록할 수 있어요.</p>
 
-      <div class="field-label">오늘 한 훈련 (복수 선택)</div>
+      <div class="field-label">날짜</div>
+      <input type="date" id="journal-date" />
+
+      <div class="field-label">훈련 (복수 선택)</div>
       <div class="tag-picker" id="journal-tags"></div>
 
-      <div class="field-label">오늘 느낀 점 / 배운 점</div>
+      <div class="field-label">느낀 점 / 배운 점</div>
       <textarea id="journal-note" placeholder="예: 발성이 아직 약하다. 대본 리딩할 때 감정선을 더 명확히..."></textarea>
 
       <div class="field-label">다음 목표</div>
@@ -303,6 +319,9 @@
     <div class="card">
       <h2>연기 영상 아카이브</h2>
       <p class="subtext">연습 영상을 올리고 스스로 피드백하며 성장 방향을 기록해요.</p>
+
+      <div class="field-label">촬영 날짜</div>
+      <input type="date" id="video-date" style="margin-bottom:14px;" />
 
       <div class="upload-box" id="upload-box">
         영상을 클릭해서 선택하거나 여기로 끌어다 놓으세요
@@ -421,6 +440,11 @@ function daysAgoStr(n){
   d.setDate(d.getDate()-n);
   return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
 }
+function shiftDateStr(dateStr, delta){
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + delta);
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
 function showToast(msg){
   const t = document.getElementById("toast");
   t.textContent = msg || "저장됐어요";
@@ -451,6 +475,7 @@ const TRAINING_TAGS = ["발성","호흡","대사","즉흥","신체훈련","카�
 
 let routineItems = [];
 let routineLog = {checked:[]};
+let routineViewDate;
 let selectedTags = [];
 let currentVideoBlob = null;
 let calYear, calMonth, selectedDate;
@@ -463,6 +488,7 @@ async function initApp(){
   calYear = now.getFullYear();
   calMonth = now.getMonth();
   selectedDate = todayStr();
+  routineViewDate = todayStr();
 
   const existing = await getAll("routineItems");
   const existingMap = new Map(existing.map(i => [i.id, i]));
@@ -479,6 +505,8 @@ async function initApp(){
   routineItems = Array.from(existingMap.values());
 
   document.getElementById("today-label").textContent = dateLabel(todayStr());
+  document.getElementById("journal-date").value = todayStr();
+  document.getElementById("video-date").value = todayStr();
 
   await renderRoutine();
   await renderJournalTags();
@@ -495,8 +523,12 @@ async function initApp(){
 }
 
 async function renderRoutine(){
-  const log = await get("routineLog", todayStr());
-  routineLog = log || {date: todayStr(), checked: []};
+  const log = await get("routineLog", routineViewDate);
+  routineLog = log || {date: routineViewDate, checked: []};
+
+  const isToday = routineViewDate === todayStr();
+  document.getElementById("routine-date-label").textContent = dateLabel(routineViewDate) + (isToday ? " · 오늘" : "");
+  document.getElementById("routine-today-btn").style.display = isToday ? "none" : "block";
 
   const groups = document.getElementById("routine-groups");
   groups.innerHTML = "";
@@ -536,7 +568,8 @@ async function renderRoutine(){
 
 async function renderStats(){
   const total = routineItems.length;
-  const done = routineLog.checked.length;
+  const todayLog = await get("routineLog", todayStr());
+  const done = todayLog ? todayLog.checked.length : 0;
   document.getElementById("stat-today").textContent = `${done}/${total}`;
 
   const allLogs = await getAll("routineLog");
@@ -578,9 +611,10 @@ function setupRoutineHandlers(){
       const idx = routineLog.checked.indexOf(id);
       if(idx >= 0) routineLog.checked.splice(idx,1);
       else routineLog.checked.push(id);
-      routineLog.date = todayStr();
+      routineLog.date = routineViewDate;
       await put("routineLog", routineLog);
       await renderRoutine();
+      await renderCalendar();
       showToast("저장됐어요");
     }
     if(e.target.dataset.remove){
@@ -603,6 +637,19 @@ function setupRoutineHandlers(){
     document.getElementById("new-item-label").value = "";
     await renderRoutine();
     showToast("항목이 추가됐어요");
+  });
+
+  document.getElementById("routine-prev-day").addEventListener("click", async () => {
+    routineViewDate = shiftDateStr(routineViewDate, -1);
+    await renderRoutine();
+  });
+  document.getElementById("routine-next-day").addEventListener("click", async () => {
+    routineViewDate = shiftDateStr(routineViewDate, 1);
+    await renderRoutine();
+  });
+  document.getElementById("routine-today-btn").addEventListener("click", async () => {
+    routineViewDate = todayStr();
+    await renderRoutine();
   });
 }
 
@@ -630,13 +677,14 @@ function setupJournalHandlers(){
   document.getElementById("save-journal-btn").addEventListener("click", async () => {
     const note = document.getElementById("journal-note").value.trim();
     const goal = document.getElementById("journal-goal").value.trim();
+    const date = document.getElementById("journal-date").value || todayStr();
     if(selectedTags.length === 0 && !note && !goal){
       showToast("내용을 입력해주세요");
       return;
     }
     const entry = {
       id: uid(),
-      date: todayStr(),
+      date,
       tags: selectedTags.slice(),
       note,
       goal,
@@ -645,16 +693,18 @@ function setupJournalHandlers(){
     await put("journalEntries", entry);
     document.getElementById("journal-note").value = "";
     document.getElementById("journal-goal").value = "";
+    document.getElementById("journal-date").value = todayStr();
     selectedTags = [];
     document.querySelectorAll(".tag-choice.selected").forEach(el => el.classList.remove("selected"));
     await renderJournalList();
+    await renderCalendar();
     showToast("일지가 저장됐어요");
   });
 }
 
 async function renderJournalList(){
   const entries = await getAll("journalEntries");
-  entries.sort((a,b) => b.createdAt - a.createdAt);
+  entries.sort((a,b) => b.date === a.date ? b.createdAt - a.createdAt : (a.date < b.date ? 1 : -1));
   const wrap = document.getElementById("journal-list");
   wrap.innerHTML = "";
   if(entries.length === 0){
@@ -680,6 +730,7 @@ async function renderJournalList(){
     btn.addEventListener("click", async () => {
       await del("journalEntries", btn.dataset.del);
       await renderJournalList();
+      await renderCalendar();
     });
   });
 }
@@ -706,6 +757,9 @@ function setupVideoHandlers(){
   function handleVideoFile(file){
     currentVideoBlob = file;
     document.getElementById("video-title").value = file.name.replace(/\.[^/.]+$/, "");
+    if(!document.getElementById("video-date").value){
+      document.getElementById("video-date").value = todayStr();
+    }
     uploadForm.style.display = "block";
   }
 
@@ -723,9 +777,10 @@ function setupVideoHandlers(){
     const title = document.getElementById("video-title").value.trim() || "제목 없음";
     const comment = document.getElementById("video-comment").value.trim();
     const direction = document.getElementById("video-direction").value.trim();
+    const date = document.getElementById("video-date").value || todayStr();
     const video = {
       id: uid(),
-      date: todayStr(),
+      date,
       title,
       comment,
       direction,
@@ -746,7 +801,7 @@ function setupVideoHandlers(){
 
 async function renderVideoList(){
   const videos = await getAll("videos");
-  videos.sort((a,b) => b.createdAt - a.createdAt);
+  videos.sort((a,b) => b.date === a.date ? b.createdAt - a.createdAt : (a.date < b.date ? 1 : -1));
   const wrap = document.getElementById("video-list");
   wrap.innerHTML = "";
   if(videos.length === 0){
