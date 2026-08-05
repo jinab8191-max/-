@@ -297,6 +297,10 @@
 
       <div class="field-label">훈련 (복수 선택)</div>
       <div class="tag-picker" id="journal-tags"></div>
+      <div class="add-row">
+        <input type="text" id="new-tag-label" placeholder="새 훈련 항목 추가 (예: 카메라 리허설)" />
+        <button class="btn secondary" id="add-tag-btn">추가</button>
+      </div>
 
       <div class="field-label">느낀 점 / 배운 점</div>
       <textarea id="journal-note" placeholder="예: 발성이 아직 약하다. 대본 리딩할 때 감정선을 더 명확히..."></textarea>
@@ -351,7 +355,7 @@
 
 <script>
 const DB_NAME = "actorRoutineDB";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 let db;
 
 function openDB(){
@@ -373,6 +377,9 @@ function openDB(){
       }
       if(!d.objectStoreNames.contains("events")){
         d.createObjectStore("events", {keyPath:"id"});
+      }
+      if(!d.objectStoreNames.contains("customTags")){
+        d.createObjectStore("customTags", {keyPath:"id"});
       }
     };
     req.onsuccess = (e) => resolve(e.target.result);
@@ -471,11 +478,12 @@ const DEFAULT_ITEMS = [
 ];
 const RETIRED_ITEM_IDS = ["p1","p2","p4"];
 
-const TRAINING_TAGS = ["발성","호흡","대사","즉흥","신체훈련","카메라 워크","씬 스터디","오디션 준비","기타"];
+const TRAINING_TAGS = ["발성","호흡","발음","대사","즉흥","신체훈련","카메라 워크","씬 스터디","오디션 준비","기타"];
 
 let routineItems = [];
 let routineLog = {checked:[]};
 let routineViewDate;
+let customTags = [];
 let selectedTags = [];
 let currentVideoBlob = null;
 let calYear, calMonth, selectedDate;
@@ -499,10 +507,13 @@ async function initApp(){
     }
   }
   for(const item of DEFAULT_ITEMS){
-    await put("routineItems", item);
-    existingMap.set(item.id, item);
+    if(!existingMap.has(item.id)){
+      await put("routineItems", item);
+      existingMap.set(item.id, item);
+    }
   }
   routineItems = Array.from(existingMap.values());
+  customTags = await getAll("customTags");
 
   document.getElementById("today-label").textContent = dateLabel(todayStr());
   document.getElementById("journal-date").value = todayStr();
@@ -556,6 +567,7 @@ async function renderRoutine(){
       row.innerHTML = `
         <input type="checkbox" ${checked ? "checked" : ""} data-id="${item.id}" />
         <span>${escapeHtml(item.label)}</span>
+        <button class="remove-btn" data-edit="${item.id}" title="수정">✎</button>
         <button class="remove-btn" data-remove="${item.id}" title="삭제">×</button>
       `;
       wrap.appendChild(row);
@@ -625,6 +637,18 @@ function setupRoutineHandlers(){
       await put("routineLog", routineLog);
       await renderRoutine();
     }
+    if(e.target.dataset.edit){
+      const id = e.target.dataset.edit;
+      const item = routineItems.find(i => i.id === id);
+      if(!item) return;
+      const newLabel = prompt("항목 내용 수정", item.label);
+      if(newLabel !== null && newLabel.trim()){
+        item.label = newLabel.trim();
+        await put("routineItems", item);
+        await renderRoutine();
+        showToast("수정됐어요");
+      }
+    }
   });
 
   document.getElementById("add-item-btn").addEventListener("click", async () => {
@@ -656,20 +680,41 @@ function setupRoutineHandlers(){
 function renderJournalTags(){
   const wrap = document.getElementById("journal-tags");
   wrap.innerHTML = "";
-  TRAINING_TAGS.forEach(tag => {
+  const allTags = TRAINING_TAGS.map(t => ({label: t, custom: false}))
+    .concat(customTags.map(t => ({label: t.label, custom: true, id: t.id})));
+
+  allTags.forEach(tagObj => {
+    const label = tagObj.label;
     const btn = document.createElement("div");
-    btn.className = "tag-choice";
-    btn.textContent = tag;
-    btn.addEventListener("click", () => {
-      if(selectedTags.includes(tag)){
-        selectedTags = selectedTags.filter(t => t !== tag);
+    btn.className = "tag-choice" + (selectedTags.includes(label) ? " selected" : "");
+    if(tagObj.custom){
+      btn.innerHTML = `${escapeHtml(label)} <span data-del-tag="${tagObj.id}" style="opacity:.6; margin-left:2px;">×</span>`;
+    } else {
+      btn.textContent = label;
+    }
+    btn.addEventListener("click", (e) => {
+      if(e.target.dataset.delTag) return;
+      if(selectedTags.includes(label)){
+        selectedTags = selectedTags.filter(t => t !== label);
         btn.classList.remove("selected");
       } else {
-        selectedTags.push(tag);
+        selectedTags.push(label);
         btn.classList.add("selected");
       }
     });
     wrap.appendChild(btn);
+  });
+
+  wrap.querySelectorAll("[data-del-tag]").forEach(x => {
+    x.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const id = x.dataset.delTag;
+      const tagObj = customTags.find(t => t.id === id);
+      await del("customTags", id);
+      customTags = customTags.filter(t => t.id !== id);
+      if(tagObj) selectedTags = selectedTags.filter(t => t !== tagObj.label);
+      renderJournalTags();
+    });
   });
 }
 
@@ -699,6 +744,23 @@ function setupJournalHandlers(){
     await renderJournalList();
     await renderCalendar();
     showToast("일지가 저장됐어요");
+  });
+
+  document.getElementById("add-tag-btn").addEventListener("click", async () => {
+    const input = document.getElementById("new-tag-label");
+    const label = input.value.trim();
+    if(!label) return;
+    const existingLabels = TRAINING_TAGS.concat(customTags.map(t => t.label));
+    if(existingLabels.includes(label)){
+      showToast("이미 있는 항목이에요");
+      return;
+    }
+    const tagObj = {id: uid(), label};
+    await put("customTags", tagObj);
+    customTags.push(tagObj);
+    input.value = "";
+    renderJournalTags();
+    showToast("훈련 항목이 추가됐어요");
   });
 }
 
