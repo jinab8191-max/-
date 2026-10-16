@@ -9,6 +9,11 @@ description: 촬영본(영상 1개, 여러 개 이어 붙이기, 카메라 2대 
 
 ## 규칙
 - 캡컷 초안은 ~/.pycapcut 의 pycapcut 으로 만든다(`~/.pycapcut/bin/python`). 초안 폴더: ~/Movies/CapCut/User Data/Projects/com.lveditor.draft
+- **초안은 반드시 ~/릴스스타일/capcut_build.py 의 Draft 클래스로 만든다.** 없으면 https://raw.githubusercontent.com/jinab8191-max/-/claude/reels-editing-tools-setup-q0g0og/motion/capcut_build.py 를 그 경로에 받는다. 아래 세 가지는 절대 어기지 않는다:
+  1. **원본 파일을 그대로 참조**하고 쓸 구간만 source_timerange 로 지정한다(`add_cuts`). ffmpeg 로 잘라 만든 새 영상 파일을 타임라인에 올리지 않는다 → 사용자가 캡컷에서 클립 앞뒤를 늘릴 수 있어야 한다.
+  2. **원본 영상 소리를 끄지 않는다**(volume 1.0). 다중카메라에서 안 쓰는 카메라 소리만 0.
+  3. **글자가 들어가는 모든 것(자막·훅·키워드·숫자·챕터·행동 유도)은 캡컷 텍스트로**(`subtitle/hook/keyword/counter/chapter/cta`). 글자를 이미지나 .mov 로 넣지 않는다 → 캡컷에서 더블클릭해 바로 고칠 수 있어야 한다.
+- 저장 전 `capcut_build.py --selftest` 와 같은 점검을 만든 초안 JSON 에 직접 해서(텍스트 수, source_timerange, volume) 결과를 보고한다.
 - 시작 전에 "캡컷에서 이 프로젝트를 닫아주세요"라고 말한다.
 - 스타일 가이드 ~/릴스스타일/style-guide.md 가 있으면 **먼저 읽고 모든 숫자를 거기서 가져온다.** 없으면 아래 기본값을 쓰고, 끝날 때 "레퍼런스 분석(reels-benchmark)을 하면 더 좋아진다"고 알려준다.
 - 사용자 확인은 두 번만: ① 편집 기획안 ② 자료 화면 목록. 나머지는 멈추지 않고 끝까지 간다.
@@ -64,7 +69,9 @@ description: 촬영본(영상 1개, 여러 개 이어 붙이기, 카메라 2대 
 - CC BY 소리를 썼으면 캡션용 출처 문구를 만든다.
 
 ## 6-1. 모션그래픽
-- 생성기: `~/.pycapcut/bin/python ~/릴스스타일/mg.py` (투명 배경 .mov 를 만든다. 색·폰트는 ~/릴스스타일/brand.json). 없으면 https://raw.githubusercontent.com/jinab8191-max/-/claude/reels-editing-tools-setup-q0g0og/motion/mg.py 를 그 경로에 받고 `~/.pycapcut/bin/pip install pillow`.
+- **글자 있는 그래픽은 capcut_build.py 의 텍스트 함수로 넣는다**(hook, keyword, counter, chapter, cta). 수정 가능해야 하므로 mg.py 로 렌더하지 않는다. 등장·퇴장은 캡컷 텍스트 애니메이션(TextIntro/TextOutro/TextLoopAnim), 크기 변화는 add_keyframe(uniform_scale) 로 표현한다.
+- mg.py(.mov) 는 **글자 없는 그래픽**(highlight 동그라미, progress 바, 도형)에만 쓰고 `add_overlay_video` 로 올린다.
+- 생성기: `~/.pycapcut/bin/python ~/릴스스타일/mg.py` (색·폰트는 ~/릴스스타일/brand.json). 없으면 https://raw.githubusercontent.com/jinab8191-max/-/claude/reels-editing-tools-setup-q0g0og/motion/mg.py 를 그 경로에 받고 `~/.pycapcut/bin/pip install pillow`.
 - 스타일 가이드의 "모션그래픽" 섹션이 있으면 그 빈도·종류를 따른다. 없으면 기본:
   | 순간 | 템플릿 | 숏폼 | 롱폼 |
   |---|---|---|---|
@@ -75,8 +82,8 @@ description: 촬영본(영상 1개, 여러 개 이어 붙이기, 카메라 2대 
   | 주제 바뀔 때 | `chapter` (`--num`) | 안 씀 | 챕터마다 |
   | 마지막 행동 유도 | `cta` | 마지막 3초 | 마지막 5초 |
   | 영상 전체 | `progress` (`--duration` 전체 길이) | 스타일 가이드에 있을 때만 | 안 씀 |
-- 영상 하나에 필요한 것을 spec.json 하나로 만들어 `mg.py batch spec.json` 으로 한 번에 렌더한다. 저장 위치 ~/릴스자료/모션/<초안 이름>/.
-- 렌더된 .mov 를 "모션그래픽" 트랙(맨 위)에 해당 시간에 올린다. 자막과 겹치면 모션그래픽 위치(`--y`)를 옮긴다.
+- 글자 없는 그래픽이 여러 개면 spec.json 하나로 만들어 `mg.py batch spec.json` 으로 한 번에 렌더한다. 저장 위치 ~/릴스자료/모션/<초안 이름>/.
+- 렌더된 .mov 는 `add_overlay_video` 로 "모션그래픽" 트랙에 해당 시간에 올린다. 자막과 겹치면 위치(`y`)를 옮긴다.
 - 캡컷에서 투명 부분이 검게 보이면 `--green` 으로 다시 만들고 사용자에게 캡컷 "크로마키"로 초록을 빼라고 알려준다.
 - 모션그래픽과 줌을 같은 순간에 겹치지 않는다(둘 다 시각 변화라 하나면 충분).
 
